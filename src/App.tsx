@@ -295,6 +295,135 @@ function FilterPanel({ filters, onChange }: FilterPanelProps) {
   );
 }
 
+// ─── Game Card ────────────────────────────────────────────────────────────────
+
+interface GameCardProps {
+  game: Game;
+}
+
+function GameCard({ game }: GameCardProps) {
+  const playerRange =
+    game.minPlayers === game.maxPlayers
+      ? `${game.minPlayers}`
+      : `${game.minPlayers}–${game.maxPlayers}`;
+
+  const playTime = game.playingTime > 0 ? `${game.playingTime} min` : null;
+
+  const communityRating =
+    game.communityRating > 0 ? game.communityRating.toFixed(1) : null;
+
+  const hasUserRating = game.userRating !== null && game.userRating > 0;
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden flex flex-col transition-all duration-150 hover:border-amber-600 hover:shadow-lg hover:shadow-amber-950/40 hover:-translate-y-0.5">
+
+      {/* Thumbnail */}
+      <div className="aspect-square w-full bg-gray-800 overflow-hidden flex items-center justify-center">
+        {game.thumbnail ? (
+          <img
+            src={game.thumbnail}
+            alt={game.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              const img = e.currentTarget;
+              img.style.display = 'none';
+              const parent = img.parentElement;
+              if (parent) {
+                const fallback = parent.querySelector('.thumbnail-fallback') as HTMLElement | null;
+                if (fallback) fallback.style.display = 'flex';
+              }
+            }}
+          />
+        ) : null}
+        <div
+          className="thumbnail-fallback w-full h-full items-center justify-center bg-gray-800"
+          style={{ display: game.thumbnail ? 'none' : 'flex' }}
+        >
+          <svg
+            className="w-12 h-12 text-gray-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
+            />
+          </svg>
+        </div>
+      </div>
+
+      {/* Card body */}
+      <div className="p-3 flex flex-col gap-2 flex-1">
+
+        {/* Game name */}
+        <p className="text-white font-semibold text-sm leading-snug line-clamp-2">
+          {game.name}
+        </p>
+
+        {/* Stats row */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400">
+          {playerRange && (
+            <span title="Player count">
+              <span className="text-gray-500">Players</span>{' '}
+              <span className="text-gray-200">{playerRange}</span>
+            </span>
+          )}
+          {playTime && (
+            <span title="Play time">
+              <span className="text-gray-500">Time</span>{' '}
+              <span className="text-gray-200">{playTime}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Ratings row */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs mt-auto pt-1 border-t border-gray-800">
+          {communityRating && (
+            <span title="Community rating" className="flex items-center gap-1">
+              <span className="text-amber-400 font-bold">{communityRating}</span>
+              <span className="text-gray-500">BGG</span>
+            </span>
+          )}
+          {hasUserRating && (
+            <span title="Your rating" className="flex items-center gap-1">
+              <span className="text-sky-400 font-bold">{(game.userRating as number).toFixed(1)}</span>
+              <span className="text-gray-500">You</span>
+            </span>
+          )}
+          <span title="Number of plays" className="ml-auto flex items-center gap-1">
+            <span className="text-gray-200 font-medium">{game.numPlays}</span>
+            <span className="text-gray-500">{game.numPlays === 1 ? 'play' : 'plays'}</span>
+          </span>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ─── Game Grid ────────────────────────────────────────────────────────────────
+
+interface GameGridProps {
+  games: Game[];
+}
+
+function GameGrid({ games }: GameGridProps) {
+  const sorted = [...games].sort((a, b) => a.numPlays - b.numPlays);
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {sorted.map(game => (
+        <GameCard key={game.id} game={game} />
+      ))}
+    </div>
+  );
+}
+
 // ─── Collection View (success state) ─────────────────────────────────────────
 
 interface CollectionViewProps {
@@ -307,7 +436,7 @@ function CollectionView({ games, onReset }: CollectionViewProps) {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
 
         {/* Header bar */}
         <div className="bg-gray-900 border border-amber-700 rounded-xl p-5 flex items-center justify-between gap-4 flex-wrap">
@@ -339,7 +468,7 @@ function CollectionView({ games, onReset }: CollectionViewProps) {
         {/* Filter panel */}
         <FilterPanel filters={filters} onChange={setFilters} />
 
-        {/* Results placeholder — Session 5 */}
+        {/* Game grid / empty state */}
         {filtered.length === 0 ? (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
             <p className="text-gray-400 text-base">No games match your filters.</p>
@@ -352,9 +481,7 @@ function CollectionView({ games, onReset }: CollectionViewProps) {
             </button>
           </div>
         ) : (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center text-gray-500 text-sm">
-            Game cards coming in Session 5 — {filtered.length} {filtered.length === 1 ? 'game' : 'games'} ready to display.
-          </div>
+          <GameGrid games={filtered} />
         )}
 
       </div>
