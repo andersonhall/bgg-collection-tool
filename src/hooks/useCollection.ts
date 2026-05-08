@@ -67,9 +67,11 @@ export function useCollection(): UseCollectionReturn {
       }
 
       // Success — data should be a Game array
-      console.log('[useCollection] response ok:', response.ok, 'isArray:', Array.isArray(data), 'length:', Array.isArray(data) ? (data as unknown[]).length : 'n/a');
+      // Deep-clone via JSON round-trip to ensure a plain, detached array (guards
+      // against any proxy or special-object edge case from the fetch response).
       if (Array.isArray(data)) {
-        setState({ status: 'success', games: data as Game[], error: null });
+        const games = JSON.parse(JSON.stringify(data)) as Game[];
+        setState({ status: 'success', games, error: null });
       } else {
         // Unexpected shape
         setState({
