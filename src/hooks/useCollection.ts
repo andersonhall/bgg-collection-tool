@@ -67,6 +67,7 @@ export function useCollection(): UseCollectionReturn {
       }
 
       // Success — data should be a Game array
+      console.log('[useCollection] response ok:', response.ok, 'isArray:', Array.isArray(data), 'length:', Array.isArray(data) ? (data as unknown[]).length : 'n/a');
       if (Array.isArray(data)) {
         setState({ status: 'success', games: data as Game[], error: null });
       } else {
