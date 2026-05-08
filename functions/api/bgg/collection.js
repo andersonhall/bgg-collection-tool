@@ -80,6 +80,19 @@ export async function onRequestGet(context) {
       }
     );
 
+    // BGG sometimes returns a <message> XML with status 200 instead of 202
+    // when the collection is queued. The library parses that as a plain string.
+    // Treat it as a retry signal rather than silently returning 0 games.
+    if (typeof collection !== 'object' || collection === null) {
+      return new Response(
+        JSON.stringify({ error: 'BGG is still processing your collection. Please try again in a few seconds.' }),
+        {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // collection.item may be a single object (if only 1 game) or an array
     const rawItems = collection.item;
     const items = Array.isArray(rawItems) ? rawItems : rawItems ? [rawItems] : [];
