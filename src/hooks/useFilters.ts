@@ -4,6 +4,16 @@ import type { Game } from '../types';
 export type PlaysFilter = 'all' | 'new' | 'played';
 export type RatingSource = 'bgg' | 'mine';
 export type SortKey = 'plays' | 'name' | 'bggRating' | 'myRating' | 'playTime';
+export type SortDirection = 'asc' | 'desc';
+
+// Sensible default direction for each sort key
+export const SORT_KEY_DEFAULTS: Record<SortKey, SortDirection> = {
+  plays: 'asc',
+  name: 'asc',
+  bggRating: 'desc',
+  myRating: 'desc',
+  playTime: 'asc',
+};
 
 export interface FilterState {
   playerCount: number | null;
@@ -13,6 +23,7 @@ export interface FilterState {
   plays: PlaysFilter;
   includeUnknownTime: boolean;
   sortKey: SortKey;
+  sortDir: SortDirection;
 }
 
 const INITIAL_FILTERS: FilterState = {
@@ -23,28 +34,40 @@ const INITIAL_FILTERS: FilterState = {
   plays: 'all',
   includeUnknownTime: true,
   sortKey: 'plays',
+  sortDir: SORT_KEY_DEFAULTS['plays'],
 };
 
-function sortGames(games: Game[], sortKey: SortKey): Game[] {
+function sortGames(games: Game[], sortKey: SortKey, sortDir: SortDirection): Game[] {
+  const flip = sortDir === 'desc' ? -1 : 1;
   return [...games].sort((a, b) => {
     switch (sortKey) {
       case 'plays':
-        return a.numPlays - b.numPlays;
+        return (a.numPlays - b.numPlays) * flip;
       case 'name':
-        return a.name.localeCompare(b.name);
+        return a.name.localeCompare(b.name) * flip;
       case 'bggRating':
-        return b.communityRating - a.communityRating;
+        // Always push unrated (0) to bottom regardless of direction
+        if (a.communityRating === 0 && b.communityRating === 0) return 0;
+        if (a.communityRating === 0) return 1;
+        if (b.communityRating === 0) return -1;
+        return (a.communityRating - b.communityRating) * flip;
       case 'myRating': {
-        // Games with no personal rating sort to the bottom
-        const aRating = a.userRating ?? -Infinity;
-        const bRating = b.userRating ?? -Infinity;
-        return bRating - aRating;
+        // Games with no personal rating always sort to the bottom
+        const aRating = a.userRating ?? null;
+        const bRating = b.userRating ?? null;
+        if (aRating === null && bRating === null) return 0;
+        if (aRating === null) return 1;
+        if (bRating === null) return -1;
+        return (aRating - bRating) * flip;
       }
       case 'playTime': {
-        // Unknown play time (0) sorts to the bottom
-        const aTime = a.playingTime === 0 ? Infinity : a.playingTime;
-        const bTime = b.playingTime === 0 ? Infinity : b.playingTime;
-        return aTime - bTime;
+        // Unknown play time (0) always sorts to the bottom
+        const aTime = a.playingTime === 0 ? null : a.playingTime;
+        const bTime = b.playingTime === 0 ? null : b.playingTime;
+        if (aTime === null && bTime === null) return 0;
+        if (aTime === null) return 1;
+        if (bTime === null) return -1;
+        return (aTime - bTime) * flip;
       }
       default:
         return 0;
@@ -86,7 +109,7 @@ export function useFilters(games: Game[], externalFilters?: FilterState, setExte
       if (filters.plays === 'played' && game.numPlays === 0) return false;
       return true;
     });
-    return sortGames(result, filters.sortKey);
+    return sortGames(result, filters.sortKey, filters.sortDir);
   }, [games, filters]);
 
   const isFiltered =

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useCollection } from './hooks/useCollection';
 import { useFilters } from './hooks/useFilters';
 import type { FilterState, RatingSource, SortKey } from './hooks/useFilters';
+import { SORT_KEY_DEFAULTS } from './hooks/useFilters';
 import type { Game } from './types';
 
 const LS_KEY = 'bgg_username';
@@ -343,15 +344,31 @@ function FilterPanel({ filters, onChange }: FilterPanelProps) {
       {/* Sort */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-sm text-gray-400 w-16 shrink-0">Sort</span>
-        {SORT_OPTIONS.map(opt => (
-          <FilterButton
-            key={opt.value}
-            active={filters.sortKey === opt.value}
-            onClick={() => set('sortKey', opt.value)}
-          >
-            {opt.label}
-          </FilterButton>
-        ))}
+        {SORT_OPTIONS.map(opt => {
+          const isActive = filters.sortKey === opt.value;
+          return (
+            <FilterButton
+              key={opt.value}
+              active={isActive}
+              onClick={() => {
+                if (isActive) {
+                  // Toggle direction on the already-active sort key
+                  onChange({ ...filters, sortDir: filters.sortDir === 'asc' ? 'desc' : 'asc' });
+                } else {
+                  // Switch to new sort key, reset to its sensible default direction
+                  onChange({ ...filters, sortKey: opt.value, sortDir: SORT_KEY_DEFAULTS[opt.value] });
+                }
+              }}
+            >
+              {opt.label}
+              {isActive && (
+                <span className="ml-1 text-xs" aria-label={filters.sortDir === 'asc' ? 'ascending' : 'descending'}>
+                  {filters.sortDir === 'asc' ? '↑' : '↓'}
+                </span>
+              )}
+            </FilterButton>
+          );
+        })}
       </div>
 
     </div>
@@ -563,6 +580,7 @@ const INITIAL_APP_FILTERS: FilterState = {
   plays: 'all',
   includeUnknownTime: true,
   sortKey: 'plays',
+  sortDir: SORT_KEY_DEFAULTS['plays'],
 };
 
 function App() {
