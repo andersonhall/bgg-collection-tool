@@ -652,15 +652,15 @@ function CollectionView({ games, onReset, filters, setFilters }: CollectionViewP
                 ? `Showing ${filtered.length} of ${games.length} games`
                 : `${games.length} ${games.length === 1 ? 'game' : 'games'} in your collection`}
             </p>
-            {isFiltered && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="text-sm text-gray-400 hover:text-amber-400 underline underline-offset-2 transition mt-1"
-              >
-                Clear filters
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={resetFilters}
+              className={`text-sm text-gray-400 hover:text-amber-400 underline underline-offset-2 transition mt-1 ${
+                isFiltered ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+            >
+              Clear filters
+            </button>
           </div>
           <div className="flex items-center gap-3">
             <button
