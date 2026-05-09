@@ -342,154 +342,164 @@ function FilterPanel({ filters, onChange }: FilterPanelProps) {
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
 
       {/* Players */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-gray-400 w-16 shrink-0">Players</span>
-        <FilterButton
-          active={filters.playerCount === null}
-          onClick={() => set('playerCount', null)}
-        >
-          Any
-        </FilterButton>
-        {PLAYER_COUNTS.map(n => (
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <span className="text-sm text-gray-400 sm:w-16 sm:shrink-0">Players</span>
+        <div className="flex flex-wrap gap-2">
           <FilterButton
-            key={n}
-            active={filters.playerCount === n}
-            onClick={() => set('playerCount', n)}
+            active={filters.playerCount === null}
+            onClick={() => set('playerCount', null)}
           >
-            {n}
+            Any
           </FilterButton>
-        ))}
+          {PLAYER_COUNTS.map(n => (
+            <FilterButton
+              key={n}
+              active={filters.playerCount === n}
+              onClick={() => set('playerCount', n)}
+            >
+              {n}
+            </FilterButton>
+          ))}
+        </div>
       </div>
 
       {/* Time */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-gray-400 w-16 shrink-0">Time</span>
-        <FilterButton
-          active={filters.maxPlayTime === null}
-          onClick={() => set('maxPlayTime', null)}
-        >
-          Any
-        </FilterButton>
-        {TIME_OPTIONS.map(opt => (
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <span className="text-sm text-gray-400 sm:w-16 sm:shrink-0">Time</span>
+        <div className="flex flex-wrap gap-2">
           <FilterButton
-            key={opt.value}
-            active={filters.maxPlayTime === opt.value}
-            onClick={() => set('maxPlayTime', opt.value)}
+            active={filters.maxPlayTime === null}
+            onClick={() => set('maxPlayTime', null)}
           >
-            {opt.label}
+            Any
           </FilterButton>
-        ))}
-        {/* Inc. unknown toggle — only shown when a time filter is active */}
-        {filters.maxPlayTime !== null && (
-          <div className="flex rounded-lg overflow-hidden border border-gray-700 ml-1">
-            {([true, false] as const).map(val => (
-              <button
-                key={String(val)}
-                type="button"
-                onClick={() => set('includeUnknownTime', val)}
-                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                  filters.includeUnknownTime === val
-                    ? 'bg-amber-500 text-gray-950'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                {val ? 'Inc. unknown' : 'Exc. unknown'}
-              </button>
-            ))}
-          </div>
-        )}
+          {TIME_OPTIONS.map(opt => (
+            <FilterButton
+              key={opt.value}
+              active={filters.maxPlayTime === opt.value}
+              onClick={() => set('maxPlayTime', opt.value)}
+            >
+              {opt.label}
+            </FilterButton>
+          ))}
+          {/* Inc. unknown toggle — only shown when a time filter is active */}
+          {filters.maxPlayTime !== null && (
+            <div className="flex rounded-lg overflow-hidden border border-gray-700 ml-1">
+              {([true, false] as const).map(val => (
+                <button
+                  key={String(val)}
+                  type="button"
+                  onClick={() => set('includeUnknownTime', val)}
+                  className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                    filters.includeUnknownTime === val
+                      ? 'bg-amber-500 text-gray-950'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  {val ? 'Inc. unknown' : 'Exc. unknown'}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Rating */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-gray-400 w-16 shrink-0">Rating</span>
-        <FilterButton
-          active={filters.minRating === 0}
-          onClick={() => set('minRating', 0)}
-        >
-          Any
-        </FilterButton>
-        {RATING_OPTIONS.map(opt => (
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <span className="text-sm text-gray-400 sm:w-16 sm:shrink-0">Rating</span>
+        <div className="flex flex-wrap gap-2">
           <FilterButton
-            key={opt.value}
-            active={filters.minRating === opt.value}
-            onClick={() => set('minRating', opt.value)}
+            active={filters.minRating === 0}
+            onClick={() => set('minRating', 0)}
           >
-            {opt.label}
+            Any
           </FilterButton>
-        ))}
-        {/* BGG / Mine source toggle — only shown when a rating threshold is active */}
-        {filters.minRating > 0 && (
-          <div className="flex rounded-lg overflow-hidden border border-gray-700 ml-1">
-            {(['bgg', 'mine'] as RatingSource[]).map(source => (
-              <button
-                key={source}
-                type="button"
-                onClick={() => set('ratingSource', source)}
-                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                  filters.ratingSource === source
-                    ? 'bg-amber-500 text-gray-950'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                {source === 'bgg' ? 'BGG' : 'Mine'}
-              </button>
-            ))}
-          </div>
-        )}
+          {RATING_OPTIONS.map(opt => (
+            <FilterButton
+              key={opt.value}
+              active={filters.minRating === opt.value}
+              onClick={() => set('minRating', opt.value)}
+            >
+              {opt.label}
+            </FilterButton>
+          ))}
+          {/* BGG / Mine source toggle — only shown when a rating threshold is active */}
+          {filters.minRating > 0 && (
+            <div className="flex rounded-lg overflow-hidden border border-gray-700 ml-1">
+              {(['bgg', 'mine'] as RatingSource[]).map(source => (
+                <button
+                  key={source}
+                  type="button"
+                  onClick={() => set('ratingSource', source)}
+                  className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                    filters.ratingSource === source
+                      ? 'bg-amber-500 text-gray-950'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  {source === 'bgg' ? 'BGG' : 'Mine'}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Plays */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-gray-400 w-16 shrink-0">Plays</span>
-        <FilterButton
-          active={filters.plays === 'all'}
-          onClick={() => set('plays', 'all')}
-        >
-          All games
-        </FilterButton>
-        <FilterButton
-          active={filters.plays === 'new'}
-          onClick={() => set('plays', 'new')}
-        >
-          New to me
-        </FilterButton>
-        <FilterButton
-          active={filters.plays === 'played'}
-          onClick={() => set('plays', 'played')}
-        >
-          Played before
-        </FilterButton>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <span className="text-sm text-gray-400 sm:w-16 sm:shrink-0">Plays</span>
+        <div className="flex flex-wrap gap-2">
+          <FilterButton
+            active={filters.plays === 'all'}
+            onClick={() => set('plays', 'all')}
+          >
+            All games
+          </FilterButton>
+          <FilterButton
+            active={filters.plays === 'new'}
+            onClick={() => set('plays', 'new')}
+          >
+            New to me
+          </FilterButton>
+          <FilterButton
+            active={filters.plays === 'played'}
+            onClick={() => set('plays', 'played')}
+          >
+            Played before
+          </FilterButton>
+        </div>
       </div>
 
       {/* Sort */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-gray-400 w-16 shrink-0">Sort</span>
-        {SORT_OPTIONS.map(opt => {
-          const isActive = filters.sortKey === opt.value;
-          return (
-            <FilterButton
-              key={opt.value}
-              active={isActive}
-              onClick={() => {
-                if (isActive) {
-                  // Toggle direction on the already-active sort key
-                  onChange({ ...filters, sortDir: filters.sortDir === 'asc' ? 'desc' : 'asc' });
-                } else {
-                  // Switch to new sort key, reset to its sensible default direction
-                  onChange({ ...filters, sortKey: opt.value, sortDir: SORT_KEY_DEFAULTS[opt.value] });
-                }
-              }}
-            >
-              {opt.label}
-              {isActive && (
-                <span className="ml-1 text-xs" aria-label={filters.sortDir === 'asc' ? 'ascending' : 'descending'}>
-                  {filters.sortDir === 'asc' ? '↑' : '↓'}
-                </span>
-              )}
-            </FilterButton>
-          );
-        })}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <span className="text-sm text-gray-400 sm:w-16 sm:shrink-0">Sort</span>
+        <div className="flex flex-wrap gap-2">
+          {SORT_OPTIONS.map(opt => {
+            const isActive = filters.sortKey === opt.value;
+            return (
+              <FilterButton
+                key={opt.value}
+                active={isActive}
+                onClick={() => {
+                  if (isActive) {
+                    // Toggle direction on the already-active sort key
+                    onChange({ ...filters, sortDir: filters.sortDir === 'asc' ? 'desc' : 'asc' });
+                  } else {
+                    // Switch to new sort key, reset to its sensible default direction
+                    onChange({ ...filters, sortKey: opt.value, sortDir: SORT_KEY_DEFAULTS[opt.value] });
+                  }
+                }}
+              >
+                {opt.label}
+                {isActive && (
+                  <span className="ml-1 text-xs" aria-label={filters.sortDir === 'asc' ? 'ascending' : 'descending'}>
+                    {filters.sortDir === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </FilterButton>
+            );
+          })}
+        </div>
       </div>
 
     </div>
