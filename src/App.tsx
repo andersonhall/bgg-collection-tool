@@ -159,6 +159,127 @@ function ErrorScreen({ message, onReset }: ErrorScreenProps) {
   );
 }
 
+// ─── Help Modal ───────────────────────────────────────────────────────────────
+
+interface HelpModalProps {
+  onClose: () => void;
+}
+
+function HelpModal({ onClose }: HelpModalProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  // Close on click-outside (overlay backdrop)
+  function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === overlayRef.current) onClose();
+  }
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={handleOverlayClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="How to use this tool"
+    >
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-800">
+          <h2 className="text-white font-bold text-lg">How to use this tool</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close help"
+            className="text-gray-400 hover:text-white transition text-2xl leading-none"
+          >
+            &times;
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-5 space-y-5 text-sm text-gray-300 leading-relaxed">
+
+          <div>
+            <p className="text-amber-400 font-semibold mb-1">Your collection</p>
+            <p>
+              This app pulls your board game collection straight from BoardGameGeek. Enter any BGG
+              username to browse their games — great for checking out a friend's shelf before game night.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-amber-400 font-semibold mb-1">Filters</p>
+            <p>
+              Use the filter panel to narrow things down by number of players, play time, and rating.
+              All filters work together, so you can find a 2-player game under 30 minutes with a high
+              BGG score in just a few clicks.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-amber-400 font-semibold mb-1">Rating filter</p>
+            <p>
+              Once you've picked a rating threshold, a toggle appears letting you choose between the
+              <span className="text-white font-medium"> BGG community rating</span> and{' '}
+              <span className="text-white font-medium">your personal rating</span>. If you've rated
+              your games on BGG, this lets you surface your personal favourites.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-amber-400 font-semibold mb-1">Time filter</p>
+            <p>
+              Some games don't have a listed play time on BGG. When a time filter is active, the
+              <span className="text-white font-medium"> Inc. / Exc. unknown</span> toggle controls
+              whether those games show up in your results. Include them if you want to cast a wider
+              net; exclude them if you only want games with a known runtime.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-amber-400 font-semibold mb-1">Sort</p>
+            <p>
+              Choose how games are ordered along the Sort row. Click the same option again to flip
+              between ascending and descending — the arrow next to the active sort shows you which
+              direction you're in.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-amber-400 font-semibold mb-1">Plays</p>
+            <p>
+              By default the list sorts with least-played games first, making it easy to discover
+              titles you haven't tried yet. The Plays filter lets you go further:{' '}
+              <span className="text-white font-medium">New to me</span> shows only games with zero
+              plays, while <span className="text-white font-medium">Played before</span> shows only
+              games you've logged at least once.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-amber-400 font-semibold mb-1">Remembers you</p>
+            <p>
+              Your BGG username is saved in your browser's local storage, so the next time you open
+              this page your collection loads automatically — no need to type it in again.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Filter Panel ─────────────────────────────────────────────────────────────
 
 interface FilterButtonProps {
@@ -514,9 +635,13 @@ interface CollectionViewProps {
 
 function CollectionView({ games, onReset, filters, setFilters }: CollectionViewProps) {
   const { filtered, isFiltered, resetFilters } = useFilters(games, filters, setFilters);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const openHelp = useCallback(() => setHelpOpen(true), []);
+  const closeHelp = useCallback(() => setHelpOpen(false), []);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
+      {helpOpen && <HelpModal onClose={closeHelp} />}
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
 
         {/* Header bar */}
@@ -537,13 +662,24 @@ function CollectionView({ games, onReset, filters, setFilters }: CollectionViewP
               </button>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onReset}
-            className="text-sm text-gray-400 hover:text-amber-400 underline underline-offset-2 whitespace-nowrap transition"
-          >
-            Load a different username
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onReset}
+              className="text-sm text-gray-400 hover:text-amber-400 underline underline-offset-2 whitespace-nowrap transition"
+            >
+              Load a different username
+            </button>
+            <button
+              type="button"
+              onClick={openHelp}
+              aria-label="How to use this tool"
+              title="How to use this tool"
+              className="w-7 h-7 rounded-full bg-gray-800 border border-gray-700 hover:border-amber-500 hover:text-amber-400 text-gray-400 text-sm font-bold flex items-center justify-center transition shrink-0"
+            >
+              ?
+            </button>
+          </div>
         </div>
 
         {/* Filter panel */}
