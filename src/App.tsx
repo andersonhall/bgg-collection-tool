@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useCollection } from './hooks/useCollection';
 import { useFilters } from './hooks/useFilters';
-import type { FilterState, RatingSource } from './hooks/useFilters';
+import type { FilterState, RatingSource, SortKey } from './hooks/useFilters';
 import type { Game } from './types';
 
 const LS_KEY = 'bgg_username';
@@ -198,6 +198,14 @@ const RATING_OPTIONS = [
   { label: '8+', value: 8 },
 ] as const;
 
+const SORT_OPTIONS: { label: string; value: SortKey }[] = [
+  { label: 'Plays', value: 'plays' },
+  { label: 'Name', value: 'name' },
+  { label: 'BGG Rating', value: 'bggRating' },
+  { label: 'My Rating', value: 'myRating' },
+  { label: 'Play Time', value: 'playTime' },
+];
+
 interface FilterPanelProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
@@ -249,6 +257,25 @@ function FilterPanel({ filters, onChange }: FilterPanelProps) {
             {opt.label}
           </FilterButton>
         ))}
+        {/* Inc. unknown toggle — only shown when a time filter is active */}
+        {filters.maxPlayTime !== null && (
+          <div className="flex rounded-lg overflow-hidden border border-gray-700 ml-1">
+            {([true, false] as const).map(val => (
+              <button
+                key={String(val)}
+                type="button"
+                onClick={() => set('includeUnknownTime', val)}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                  filters.includeUnknownTime === val
+                    ? 'bg-amber-500 text-gray-950'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                {val ? 'Inc. unknown' : 'Exc. unknown'}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Rating */}
@@ -311,6 +338,20 @@ function FilterPanel({ filters, onChange }: FilterPanelProps) {
         >
           Played before
         </FilterButton>
+      </div>
+
+      {/* Sort */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-gray-400 w-16 shrink-0">Sort</span>
+        {SORT_OPTIONS.map(opt => (
+          <FilterButton
+            key={opt.value}
+            active={filters.sortKey === opt.value}
+            onClick={() => set('sortKey', opt.value)}
+          >
+            {opt.label}
+          </FilterButton>
+        ))}
       </div>
 
     </div>
@@ -436,11 +477,9 @@ interface GameGridProps {
 }
 
 function GameGrid({ games }: GameGridProps) {
-  const sorted = [...games].sort((a, b) => a.numPlays - b.numPlays);
-
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-      {sorted.map(game => (
+      {games.map(game => (
         <GameCard key={game.id} game={game} />
       ))}
     </div>
@@ -452,10 +491,12 @@ function GameGrid({ games }: GameGridProps) {
 interface CollectionViewProps {
   games: Game[];
   onReset: () => void;
+  filters: FilterState;
+  setFilters: (f: FilterState) => void;
 }
 
-function CollectionView({ games, onReset }: CollectionViewProps) {
-  const { filters, setFilters, filtered, isFiltered, resetFilters } = useFilters(games);
+function CollectionView({ games, onReset, filters, setFilters }: CollectionViewProps) {
+  const { filtered, isFiltered, resetFilters } = useFilters(games, filters, setFilters);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
@@ -514,8 +555,19 @@ function CollectionView({ games, onReset }: CollectionViewProps) {
 
 // ─── App Shell ────────────────────────────────────────────────────────────────
 
+const INITIAL_APP_FILTERS: FilterState = {
+  playerCount: null,
+  maxPlayTime: null,
+  minRating: 0,
+  ratingSource: 'bgg',
+  plays: 'all',
+  includeUnknownTime: true,
+  sortKey: 'plays',
+};
+
 function App() {
   const { status, games, error, fetchCollection, reset } = useCollection();
+  const [appFilters, setAppFilters] = useState<FilterState>(INITIAL_APP_FILTERS);
 
   // Read saved username once on mount; auto-load collection if found.
   useEffect(() => {
@@ -545,7 +597,14 @@ function App() {
   }
 
   if (status === 'success') {
-    return <CollectionView games={games} onReset={reset} />;
+    return (
+      <CollectionView
+        games={games}
+        onReset={reset}
+        filters={appFilters}
+        setFilters={setAppFilters}
+      />
+    );
   }
 
   // idle — pre-populate with any saved username so the user can correct it
