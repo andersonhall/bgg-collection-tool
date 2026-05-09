@@ -326,7 +326,7 @@ function GameCard({ game }: GameCardProps) {
           <img
             src={imageSrc}
             alt={game.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain p-1"
             loading="lazy"
             onError={(e) => {
               const img = e.currentTarget;
