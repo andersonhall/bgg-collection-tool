@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useCollection } from './hooks/useCollection';
 import { useFilters } from './hooks/useFilters';
 import type { FilterState } from './hooks/useFilters';
 import type { Game } from './types';
+
+const LS_KEY = 'bgg_username';
 
 // ─── Spinner ─────────────────────────────────────────────────────────────────
 
@@ -21,10 +23,11 @@ function Spinner() {
 interface UsernameFormProps {
   onSubmit: (username: string) => void;
   isLoading: boolean;
+  initialUsername?: string;
 }
 
-function UsernameForm({ onSubmit, isLoading }: UsernameFormProps) {
-  const [username, setUsername] = useState('');
+function UsernameForm({ onSubmit, isLoading, initialUsername = '' }: UsernameFormProps) {
+  const [username, setUsername] = useState(initialUsername);
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -495,6 +498,25 @@ function CollectionView({ games, onReset }: CollectionViewProps) {
 function App() {
   const { status, games, error, fetchCollection, reset } = useCollection();
 
+  // Read saved username once on mount; auto-load collection if found.
+  useEffect(() => {
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) {
+      fetchCollection(saved);
+    }
+    // Only run on mount — fetchCollection is stable (useCallback with no deps).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Wrap submit: persist to localStorage, then fetch.
+  const handleSubmit = useCallback(
+    (username: string) => {
+      localStorage.setItem(LS_KEY, username);
+      fetchCollection(username);
+    },
+    [fetchCollection],
+  );
+
   if (status === 'loading') {
     return <LoadingScreen />;
   }
@@ -507,11 +529,13 @@ function App() {
     return <CollectionView games={games} onReset={reset} />;
   }
 
-  // idle
+  // idle — pre-populate with any saved username so the user can correct it
+  const savedUsername = localStorage.getItem(LS_KEY) ?? '';
   return (
     <UsernameForm
-      onSubmit={fetchCollection}
+      onSubmit={handleSubmit}
       isLoading={false}
+      initialUsername={savedUsername}
     />
   );
 }
