@@ -307,7 +307,10 @@ function GameCard({ game }: GameCardProps) {
       ? `${game.minPlayers}`
       : `${game.minPlayers}–${game.maxPlayers}`;
 
-  const playTime = game.playingTime > 0 ? `${game.playingTime} min` : null;
+  const playTime = game.playingTime > 0 ? `${game.playingTime} min` : '—';
+
+  // Prefer the full-res image; fall back to thumbnail; empty string if neither.
+  const imageSrc = game.image || game.thumbnail || '';
 
   const communityRating =
     game.communityRating > 0 ? game.communityRating.toFixed(1) : null;
@@ -317,11 +320,11 @@ function GameCard({ game }: GameCardProps) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden flex flex-col transition-all duration-150 hover:border-amber-600 hover:shadow-lg hover:shadow-amber-950/40 hover:-translate-y-0.5">
 
-      {/* Thumbnail */}
+      {/* Image — prefer full-res image, fall back to thumbnail, then SVG placeholder */}
       <div className="aspect-square w-full bg-gray-800 overflow-hidden flex items-center justify-center">
-        {game.thumbnail ? (
+        {imageSrc ? (
           <img
-            src={game.thumbnail}
+            src={imageSrc}
             alt={game.name}
             className="w-full h-full object-cover"
             loading="lazy"
@@ -338,7 +341,7 @@ function GameCard({ game }: GameCardProps) {
         ) : null}
         <div
           className="thumbnail-fallback w-full h-full items-center justify-center bg-gray-800"
-          style={{ display: game.thumbnail ? 'none' : 'flex' }}
+          style={{ display: imageSrc ? 'none' : 'flex' }}
         >
           <svg
             className="w-12 h-12 text-gray-600"
@@ -373,12 +376,10 @@ function GameCard({ game }: GameCardProps) {
               <span className="text-gray-200">{playerRange}</span>
             </span>
           )}
-          {playTime && (
-            <span title="Play time">
-              <span className="text-gray-500">Time</span>{' '}
-              <span className="text-gray-200">{playTime}</span>
-            </span>
-          )}
+          <span title="Play time">
+            <span className="text-gray-500">Time</span>{' '}
+            <span className="text-gray-200">{playTime}</span>
+          </span>
         </div>
 
         {/* Ratings row */}

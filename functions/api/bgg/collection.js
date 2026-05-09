@@ -29,6 +29,7 @@ function transformItem(item) {
   return {
     id: String(item.objectid ?? ''),
     name,
+    image: item.image ?? '',
     thumbnail: item.thumbnail ?? '',
     minPlayers: Number(stats.minplayers) || 0,
     maxPlayers: Number(stats.maxplayers) || 0,
