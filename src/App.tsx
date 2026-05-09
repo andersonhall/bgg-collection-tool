@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useCollection } from './hooks/useCollection';
 import { useFilters } from './hooks/useFilters';
-import type { FilterState } from './hooks/useFilters';
+import type { FilterState, RatingSource } from './hooks/useFilters';
 import type { Game } from './types';
 
 const LS_KEY = 'bgg_username';
@@ -269,6 +269,25 @@ function FilterPanel({ filters, onChange }: FilterPanelProps) {
             {opt.label}
           </FilterButton>
         ))}
+        {/* BGG / Mine source toggle — only shown when a rating threshold is active */}
+        {filters.minRating > 0 && (
+          <div className="flex rounded-lg overflow-hidden border border-gray-700 ml-1">
+            {(['bgg', 'mine'] as RatingSource[]).map(source => (
+              <button
+                key={source}
+                type="button"
+                onClick={() => set('ratingSource', source)}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                  filters.ratingSource === source
+                    ? 'bg-amber-500 text-gray-950'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                {source === 'bgg' ? 'BGG' : 'Mine'}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Plays */}
